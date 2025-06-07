@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { PiPaymentButton } from "@/components/ui/pi-payment-button"
+import { PiWalletInfo } from "@/components/ui/pi-wallet-info"
 
 const categories = [
   {
@@ -414,8 +416,23 @@ export default function YemenMarketHomePage() {
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter className="p-6 pt-0">
-                  <Button className="w-full bg-red-600 hover:bg-red-700 text-white">أضف إلى السلة</Button>
+                <CardFooter className="p-6 pt-0 space-y-3">
+                  <PiPaymentButton
+                    amount={product.price}
+                    productName={product.name}
+                    productId={product.id.toString()}
+                    onPaymentSuccess={(result) => {
+                      console.log("Payment successful:", result)
+                      // Handle successful payment
+                    }}
+                    onPaymentError={(error) => {
+                      console.error("Payment failed:", error)
+                      // Handle payment error
+                    }}
+                  />
+                  <Button variant="outline" className="w-full">
+                    أضف إلى السلة
+                  </Button>
                 </CardFooter>
               </Card>
             ))}
@@ -468,6 +485,16 @@ export default function YemenMarketHomePage() {
               <h4 className="text-xl font-bold mb-2">دعم فني 24/7</h4>
               <p className="text-gray-600">فريق دعم متاح على مدار الساعة عبر الهاتف والواتساب</p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Pi Network Payment Info */}
+      <section className="py-16 bg-gradient-to-br from-yellow-50 to-orange-50">
+        <div className="container mx-auto px-4">
+          <div className="max-w-2xl mx-auto">
+            <h3 className="text-3xl font-bold text-center mb-8 text-gray-800">الدفع بعملة Pi Network</h3>
+            <PiWalletInfo />
           </div>
         </div>
       </section>

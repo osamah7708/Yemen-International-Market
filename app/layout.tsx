@@ -1,11 +1,13 @@
 import type React from "react"
 import "@/app/globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
+import { Toaster } from "@/components/ui/toaster"
+import { Toaster as Sonner } from "sonner"
 
 export const metadata = {
   title: "سوق اليمن الدولي",
   description: "منصة تسوق إلكتروني شاملة للمجتمع اليمني",
-    generator: 'v0.dev'
+  generator: "v0.dev",
 }
 
 export default function RootLayout({
@@ -22,6 +24,8 @@ export default function RootLayout({
       <body>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           {children}
+          <Toaster />
+          <Sonner position="top-center" richColors />
         </ThemeProvider>
       </body>
     </html>
