@@ -9,6 +9,18 @@ export interface PiPayment {
   }
 }
 
+export interface PiTransfer {
+  amount: number
+  toWallet: string
+  memo: string
+  metadata: {
+    productId?: string
+    orderId?: string
+    userId?: string
+    transferType?: string
+  }
+}
+
 export interface PiPaymentResult {
   paymentId: string
   txid: string
@@ -105,6 +117,33 @@ export class PiPaymentService {
           callbacks.onReadyForServerCompletion(paymentId, txid)
         }, 2000)
       },
+
+      // إضافة دالة التحويل المباشر
+      createTransfer: (transfer: PiTransfer, callbacks: any) => {
+        console.log("Mock Pi direct transfer started:", transfer)
+
+        const transferId = `mock_transfer_${Date.now()}`
+        const txid = `mock_tx_${Date.now()}`
+
+        // التحقق من صحة عنوان المحفظة
+        if (!transfer.toWallet || transfer.toWallet.length < 10) {
+          setTimeout(() => {
+            callbacks.onError(new Error("عنوان المحفظة غير صحيح"))
+          }, 500)
+          return
+        }
+
+        // محاكاة تدفق التحويل
+        setTimeout(() => {
+          console.log("Mock transfer approval phase")
+          callbacks.onReadyForServerApproval(transferId)
+        }, 1000)
+
+        setTimeout(() => {
+          console.log("Mock transfer completion phase")
+          callbacks.onReadyForServerCompletion(transferId, txid)
+        }, 2500)
+      },
     }
   }
 
@@ -192,6 +231,109 @@ export class PiPaymentService {
       throw error
     }
   }
+
+  async createDirectTransfer(
+    amount: number,
+    toWallet: string,
+    memo: string,
+    metadata: PiTransfer["metadata"] = {},
+  ): Promise<PiPaymentResult> {
+    try {
+      if (!this.isInitialized) {
+        const initialized = await this.initialize()
+        if (!initialized) {
+          throw new Error("Failed to initialize Pi Payment Service")
+        }
+      }
+
+      if (typeof window === "undefined" || !window.Pi) {
+        throw new Error("Pi SDK not available")
+      }
+
+      // التحقق من صحة عنوان المحفظة
+      if (!toWallet || toWallet.trim().length === 0) {
+        throw new Error("عنوان المحفظة مطلوب")
+      }
+
+      if (toWallet.length < 10) {
+        throw new Error("عنوان المحفظة غير صحيح")
+      }
+
+      const transfer: PiTransfer = { amount, toWallet, memo, metadata }
+
+      return new Promise((resolve, reject) => {
+        try {
+          // استخدام createTransfer إذا كان متوفراً، وإلا استخدم createPayment مع معلومات التحويل
+          if (window.Pi!.createTransfer) {
+            window.Pi!.createTransfer(transfer, {
+              onReadyForServerApproval: (transferId: string) => {
+                console.log("Transfer ready for server approval:", transferId)
+              },
+              onReadyForServerCompletion: (transferId: string, txid: string) => {
+                console.log("Transfer completed:", transferId, txid)
+                resolve({
+                  paymentId: transferId,
+                  txid,
+                  status: "completed",
+                })
+              },
+              onCancel: (transferId: string) => {
+                console.log("Transfer cancelled:", transferId)
+                resolve({
+                  paymentId: transferId,
+                  txid: "",
+                  status: "cancelled",
+                })
+              },
+              onError: (error: Error) => {
+                console.error("Transfer error:", error)
+                reject(error)
+              },
+            })
+          } else {
+            // استخدام createPayment كبديل مع معلومات التحويل في المذكرة
+            const paymentMemo = `${memo} - تحويل إلى: ${toWallet}`
+            const paymentMetadata = { ...metadata, toWallet, transferType: "direct" }
+
+            window.Pi!.createPayment(
+              { amount, memo: paymentMemo, metadata: paymentMetadata },
+              {
+                onReadyForServerApproval: (paymentId: string) => {
+                  console.log("Payment (as transfer) ready for server approval:", paymentId)
+                },
+                onReadyForServerCompletion: (paymentId: string, txid: string) => {
+                  console.log("Payment (as transfer) completed:", paymentId, txid)
+                  resolve({
+                    paymentId,
+                    txid,
+                    status: "completed",
+                  })
+                },
+                onCancel: (paymentId: string) => {
+                  console.log("Payment (as transfer) cancelled:", paymentId)
+                  resolve({
+                    paymentId,
+                    txid: "",
+                    status: "cancelled",
+                  })
+                },
+                onError: (error: Error) => {
+                  console.error("Payment (as transfer) error:", error)
+                  reject(error)
+                },
+              },
+            )
+          }
+        } catch (error) {
+          console.error("Error in createDirectTransfer:", error)
+          reject(error)
+        }
+      })
+    } catch (error) {
+      console.error("Direct transfer creation failed:", error)
+      throw error
+    }
+  }
 }
 
 // Pi Network SDK types للـ TypeScript
@@ -207,6 +349,15 @@ declare global {
           onReadyForServerCompletion: (paymentId: string, txid: string) => void
           onCancel: (paymentId: string) => void
           onError: (error: Error, payment?: any) => void
+        },
+      ) => void
+      createTransfer?: (
+        transfer: PiTransfer,
+        callbacks: {
+          onReadyForServerApproval: (transferId: string) => void
+          onReadyForServerCompletion: (transferId: string, txid: string) => void
+          onCancel: (transferId: string) => void
+          onError: (error: Error, transfer?: any) => void
         },
       ) => void
     }

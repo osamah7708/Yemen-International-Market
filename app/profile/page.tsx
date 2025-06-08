@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { User, Edit, Wallet, Phone, Mail, MapPin, Save, ArrowLeft } from "lucide-react"
+import { User, Edit, Wallet, Phone, Mail, MapPin, Save, ArrowLeft, Copy, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation"
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null)
   const [isEditing, setIsEditing] = useState(false)
+  const [isCopied, setIsCopied] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -43,6 +44,18 @@ export default function ProfilePage() {
     localStorage.setItem("user", JSON.stringify(updatedUser))
     setUser(updatedUser)
     setIsEditing(false)
+  }
+
+  const copyWalletAddress = async () => {
+    if (user.piWallet) {
+      try {
+        await navigator.clipboard.writeText(user.piWallet)
+        setIsCopied(true)
+        setTimeout(() => setIsCopied(false), 2000)
+      } catch (err) {
+        console.error("Failed to copy wallet address:", err)
+      }
+    }
   }
 
   if (!user) {
@@ -173,18 +186,42 @@ export default function ProfilePage() {
                   <label className="text-sm font-medium flex items-center gap-2">
                     <Wallet className="h-4 w-4" />
                     عنوان محفظة Pi Network
+                    <Badge variant="outline" className="text-xs">
+                      مطلوب للدفع
+                    </Badge>
                   </label>
                   {isEditing ? (
-                    <Input
-                      value={formData.piWallet}
-                      onChange={(e) => setFormData({ ...formData, piWallet: e.target.value })}
-                      placeholder="أدخل عنوان محفظة Pi الخاصة بك"
-                      className="font-mono text-sm"
-                    />
+                    <div className="space-y-2">
+                      <Input
+                        value={formData.piWallet}
+                        onChange={(e) => setFormData({ ...formData, piWallet: e.target.value })}
+                        placeholder="أدخل عنوان محفظة Pi الخاصة بك (مثال: GAHPCOE5XS2PBFUVTPXF5IR3AZ5ASESD4FZZAGAH425WTZKLPNHY7FW4)"
+                        className="font-mono text-sm"
+                      />
+                      <p className="text-xs text-gray-500">
+                        هذا العنوان سيتم استخدامه لاستقبال مدفوعات Pi عند الشراء من التطبيق
+                      </p>
+                    </div>
                   ) : (
-                    <p className="text-gray-800 bg-gray-50 p-3 rounded-lg font-mono text-sm break-all">
-                      {user.piWallet || "غير محدد"}
-                    </p>
+                    <div className="space-y-2">
+                      {user.piWallet ? (
+                        <div className="flex items-center gap-2">
+                          <p className="text-gray-800 bg-gray-50 p-3 rounded-lg font-mono text-sm break-all flex-1">
+                            {user.piWallet}
+                          </p>
+                          <Button variant="outline" size="sm" onClick={copyWalletAddress} className="gap-2">
+                            {isCopied ? <CheckCircle className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                            {isCopied ? "تم النسخ" : "نسخ"}
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+                          <p className="text-yellow-800 text-sm">
+                            لم يتم إضافة عنوان محفظة Pi. يرجى إضافة عنوان محفظتك لتتمكن من استقبال المدفوعات.
+                          </p>
+                        </div>
+                      )}
+                    </div>
                   )}
                 </div>
               </CardContent>
@@ -239,15 +276,23 @@ export default function ProfilePage() {
               </CardContent>
             </Card>
 
-            <Card className="border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50">
+            <Card
+              className={`border-2 ${user.piWallet ? "border-green-200 bg-gradient-to-br from-green-50 to-emerald-50" : "border-yellow-200 bg-gradient-to-br from-yellow-50 to-orange-50"}`}
+            >
               <CardHeader>
-                <CardTitle className="text-yellow-800">محفظة Pi Network</CardTitle>
+                <CardTitle className={user.piWallet ? "text-green-800" : "text-yellow-800"}>محفظة Pi Network</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-center">
-                  <div className="text-3xl mb-2">💰</div>
-                  <p className="text-sm text-yellow-700">{user.piWallet ? "محفظة متصلة" : "لم يتم ربط محفظة"}</p>
-                  {user.piWallet && <Badge className="mt-2 bg-green-500">✓ موثقة</Badge>}
+                  <div className="text-3xl mb-2">{user.piWallet ? "✅" : "⚠️"}</div>
+                  <p className={`text-sm ${user.piWallet ? "text-green-700" : "text-yellow-700"}`}>
+                    {user.piWallet ? "محفظة متصلة وجاهزة للاستقبال" : "لم يتم ربط محفظة"}
+                  </p>
+                  {user.piWallet ? (
+                    <Badge className="mt-2 bg-green-500">✓ موثقة وجاهزة</Badge>
+                  ) : (
+                    <Badge className="mt-2 bg-yellow-500">⚠️ مطلوب إضافة محفظة</Badge>
+                  )}
                 </div>
               </CardContent>
             </Card>

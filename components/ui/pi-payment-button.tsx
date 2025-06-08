@@ -31,6 +31,7 @@ export function PiPaymentButton({
   const [paymentStatus, setPaymentStatus] = useState<"idle" | "processing" | "success" | "failed">("idle")
   const [errorMessage, setErrorMessage] = useState<string>("")
   const [isServiceReady, setIsServiceReady] = useState(false)
+  const [userWallet, setUserWallet] = useState<string>("")
 
   useEffect(() => {
     // تهيئة الخدمة عند تحميل المكون
@@ -46,12 +47,39 @@ export function PiPaymentButton({
       }
     }
 
+    // الحصول على عنوان محفظة المستخدم من localStorage
+    const getUserWallet = () => {
+      try {
+        const userData = localStorage.getItem("user")
+        if (userData) {
+          const user = JSON.parse(userData)
+          if (user.piWallet) {
+            setUserWallet(user.piWallet)
+            console.log("User wallet found:", user.piWallet)
+          } else {
+            setErrorMessage("لم يتم العثور على عنوان محفظة Pi في ملفك الشخصي")
+          }
+        } else {
+          setErrorMessage("يرجى تسجيل الدخول أولاً")
+        }
+      } catch (error) {
+        console.error("Error getting user wallet:", error)
+        setErrorMessage("خطأ في قراءة بيانات المستخدم")
+      }
+    }
+
     initializeService()
+    getUserWallet()
   }, [])
 
-  const handlePayment = async () => {
+  const handleDirectTransfer = async () => {
     if (!isServiceReady) {
       setErrorMessage("نظام الدفع غير جاهز، يرجى المحاولة مرة أخرى")
+      return
+    }
+
+    if (!userWallet) {
+      setErrorMessage("يرجى إضافة عنوان محفظة Pi في ملفك الشخصي أولاً")
       return
     }
 
@@ -62,7 +90,9 @@ export function PiPaymentButton({
     try {
       const piService = PiPaymentService.getInstance()
 
-      console.log("Starting payment process...")
+      console.log("Starting direct transfer process...")
+      console.log("Transfer amount:", amount, "Pi")
+      console.log("To wallet:", userWallet)
 
       // المصادقة
       console.log("Authenticating user...")
@@ -72,32 +102,50 @@ export function PiPaymentButton({
         throw new Error("فشل في تسجيل الدخول إلى Pi Network")
       }
 
-      console.log("Authentication successful, creating payment...")
+      console.log("Authentication successful, creating direct transfer...")
 
-      // إنشاء عملية الدفع
-      const result = await piService.createPayment(amount, `دفع مقابل: ${productName}`, {
+      // إنشاء عملية التحويل المباشر
+      const result = await piService.createDirectTransfer(amount, userWallet, `دفع مقابل: ${productName}`, {
         productId,
         orderId,
         userId: auth.user?.uid,
+        transferType: "direct_payment",
       })
 
-      console.log("Payment result:", result)
+      console.log("Transfer result:", result)
 
       if (result.status === "completed") {
         setPaymentStatus("success")
+
+        // حفظ معلومات المعاملة في localStorage
+        const transactionData = {
+          id: result.paymentId,
+          txid: result.txid,
+          amount,
+          productName,
+          productId,
+          toWallet: userWallet,
+          timestamp: new Date().toISOString(),
+          status: "completed",
+        }
+
+        const existingTransactions = JSON.parse(localStorage.getItem("userTransactions") || "[]")
+        existingTransactions.push(transactionData)
+        localStorage.setItem("userTransactions", JSON.stringify(existingTransactions))
+
         onPaymentSuccess?.(result)
       } else if (result.status === "cancelled") {
         setPaymentStatus("idle")
-        setErrorMessage("تم إلغاء عملية الدفع")
+        setErrorMessage("تم إلغاء عملية التحويل")
       } else {
         setPaymentStatus("failed")
-        setErrorMessage("فشل في عملية الدفع")
+        setErrorMessage("فشل في عملية التحويل")
       }
     } catch (error) {
-      console.error("Payment process error:", error)
+      console.error("Transfer process error:", error)
       setPaymentStatus("failed")
 
-      const errorMsg = error instanceof Error ? error.message : "حدث خطأ في عملية الدفع"
+      const errorMsg = error instanceof Error ? error.message : "حدث خطأ في عملية التحويل"
       setErrorMessage(errorMsg)
       onPaymentError?.(error instanceof Error ? error : new Error(errorMsg))
     } finally {
@@ -120,11 +168,20 @@ export function PiPaymentButton({
       )
     }
 
+    if (!userWallet) {
+      return (
+        <>
+          <AlertCircle className="h-4 w-4" />
+          محفظة غير مربوطة
+        </>
+      )
+    }
+
     if (isLoading) {
       return (
         <>
           <Loader2 className="h-4 w-4 animate-spin" />
-          جاري المعالجة...
+          جاري التحويل...
         </>
       )
     }
@@ -133,7 +190,7 @@ export function PiPaymentButton({
       return (
         <>
           <CheckCircle className="h-4 w-4" />
-          تم الدفع بنجاح
+          تم التحويل بنجاح
         </>
       )
     }
@@ -150,23 +207,24 @@ export function PiPaymentButton({
     return (
       <>
         <Wallet className="h-4 w-4" />
-        ادفع {amount.toFixed(3)} Pi
+        تحويل {amount.toFixed(3)} Pi
       </>
     )
   }
 
   const getButtonVariant = () => {
+    if (!userWallet) return "secondary"
     if (paymentStatus === "success") return "default"
     if (paymentStatus === "failed") return "destructive"
     return "default"
   }
 
-  const isButtonDisabled = disabled || !isServiceReady || isLoading || paymentStatus === "success"
+  const isButtonDisabled = disabled || !isServiceReady || !userWallet || isLoading || paymentStatus === "success"
 
   return (
     <div className="space-y-2">
       <Button
-        onClick={paymentStatus === "failed" ? resetPayment : handlePayment}
+        onClick={paymentStatus === "failed" ? resetPayment : handleDirectTransfer}
         disabled={isButtonDisabled}
         variant={getButtonVariant()}
         className={`w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold ${className}`}
@@ -174,12 +232,15 @@ export function PiPaymentButton({
         {getButtonContent()}
       </Button>
 
-      {paymentStatus === "processing" && (
-        <div className="text-center">
+      {paymentStatus === "processing" && userWallet && (
+        <div className="text-center space-y-1">
           <Badge variant="outline" className="text-blue-600 border-blue-600">
             <Loader2 className="h-3 w-3 animate-spin mr-1" />
-            يرجى إكمال الدفع في تطبيق Pi Network
+            جاري التحويل إلى محفظتك
           </Badge>
+          <div className="text-xs text-gray-500 break-all">
+            إلى: {userWallet.substring(0, 8)}...{userWallet.substring(userWallet.length - 8)}
+          </div>
         </div>
       )}
 
@@ -192,11 +253,19 @@ export function PiPaymentButton({
         </div>
       )}
 
+      {userWallet && paymentStatus === "idle" && (
+        <div className="text-xs text-gray-500 text-center break-all">
+          سيتم التحويل إلى: {userWallet.substring(0, 8)}...{userWallet.substring(userWallet.length - 8)}
+        </div>
+      )}
+
+      {!userWallet && <div className="text-xs text-red-500 text-center">يرجى إضافة عنوان محفظة Pi في ملفك الشخصي</div>}
+
       <div className="text-xs text-gray-500 text-center">
         {typeof window !== "undefined" &&
         (window.location.hostname === "localhost" || window.location.hostname.includes("vercel"))
           ? "وضع التطوير - محاكاة Pi Network"
-          : "الدفع آمن ومشفر عبر شبكة Pi Network"}
+          : "التحويل آمن ومشفر عبر شبكة Pi Network"}
       </div>
     </div>
   )
