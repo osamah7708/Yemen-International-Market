@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Wallet, CheckCircle, XCircle, AlertCircle } from "lucide-react"
-import { PiPaymentService, type PiPaymentResult } from "@/lib/pi-payment"
+import { Loader2, Wallet, CheckCircle, XCircle, AlertCircle, ExternalLink } from "lucide-react"
+import { PiPaymentService, type PiPaymentResult, isPiBrowser } from "@/lib/pi-payment"
 
 interface PiPaymentButtonProps {
   amount: number
@@ -32,8 +32,12 @@ export function PiPaymentButton({
   const [errorMessage, setErrorMessage] = useState<string>("")
   const [isServiceReady, setIsServiceReady] = useState(false)
   const [userWallet, setUserWallet] = useState<string>("")
+  const [isPiBrowserDetected, setIsPiBrowserDetected] = useState(false)
 
   useEffect(() => {
+    // تحقق من Pi Browser
+    setIsPiBrowserDetected(isPiBrowser())
+
     // تهيئة الخدمة عند تحميل المكون
     const initializeService = async () => {
       try {
@@ -70,7 +74,37 @@ export function PiPaymentButton({
 
     initializeService()
     getUserWallet()
+
+    // معالج للعودة من Pi Browser
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return
+
+      const { type, data } = event.data
+      if (type === "PI_PAYMENT_CALLBACK") {
+        handlePaymentCallback(data)
+      }
+    }
+
+    window.addEventListener("message", handleMessage)
+    return () => window.removeEventListener("message", handleMessage)
   }, [])
+
+  const handlePaymentCallback = (data: any) => {
+    console.log("Payment callback received in button:", data)
+
+    if (data.status === "completed") {
+      setPaymentStatus("success")
+      onPaymentSuccess?.(data)
+    } else if (data.status === "cancelled") {
+      setPaymentStatus("idle")
+      setErrorMessage("تم إلغاء عملية التحويل")
+    } else {
+      setPaymentStatus("failed")
+      setErrorMessage("فشل في عملية التحويل")
+    }
+
+    setIsLoading(false)
+  }
 
   const handleDirectTransfer = async () => {
     if (!isServiceReady) {
@@ -93,6 +127,7 @@ export function PiPaymentButton({
       console.log("Starting direct transfer process...")
       console.log("Transfer amount:", amount, "Pi")
       console.log("To wallet:", userWallet)
+      console.log("Pi Browser detected:", isPiBrowserDetected)
 
       // المصادقة
       console.log("Authenticating user...")
@@ -116,27 +151,13 @@ export function PiPaymentButton({
 
       if (result.status === "completed") {
         setPaymentStatus("success")
-
-        // حفظ معلومات المعاملة في localStorage
-        const transactionData = {
-          id: result.paymentId,
-          txid: result.txid,
-          amount,
-          productName,
-          productId,
-          toWallet: userWallet,
-          timestamp: new Date().toISOString(),
-          status: "completed",
-        }
-
-        const existingTransactions = JSON.parse(localStorage.getItem("userTransactions") || "[]")
-        existingTransactions.push(transactionData)
-        localStorage.setItem("userTransactions", JSON.stringify(existingTransactions))
-
         onPaymentSuccess?.(result)
       } else if (result.status === "cancelled") {
         setPaymentStatus("idle")
         setErrorMessage("تم إلغاء عملية التحويل")
+      } else if (result.status === "pending") {
+        setPaymentStatus("processing")
+        setErrorMessage("المعاملة قيد المعالجة في Pi Browser")
       } else {
         setPaymentStatus("failed")
         setErrorMessage("فشل في عملية التحويل")
@@ -149,13 +170,17 @@ export function PiPaymentButton({
       setErrorMessage(errorMsg)
       onPaymentError?.(error instanceof Error ? error : new Error(errorMsg))
     } finally {
-      setIsLoading(false)
+      if (!isPiBrowserDetected) {
+        setIsLoading(false)
+      }
+      // في Pi Browser، سيتم إيقاف التحميل عند العودة من التطبيق
     }
   }
 
   const resetPayment = () => {
     setPaymentStatus("idle")
     setErrorMessage("")
+    setIsLoading(false)
   }
 
   const getButtonContent = () => {
@@ -181,7 +206,7 @@ export function PiPaymentButton({
       return (
         <>
           <Loader2 className="h-4 w-4 animate-spin" />
-          جاري التحويل...
+          {isPiBrowserDetected ? "جاري فتح Pi Browser..." : "جاري التحويل..."}
         </>
       )
     }
@@ -207,7 +232,14 @@ export function PiPaymentButton({
     return (
       <>
         <Wallet className="h-4 w-4" />
-        تحويل {amount.toFixed(3)} Pi
+        {isPiBrowserDetected ? (
+          <>
+            تحويل {amount.toFixed(3)} Pi
+            <ExternalLink className="h-3 w-3 ml-1" />
+          </>
+        ) : (
+          `تحويل ${amount.toFixed(3)} Pi`
+        )}
       </>
     )
   }
@@ -219,7 +251,7 @@ export function PiPaymentButton({
     return "default"
   }
 
-  const isButtonDisabled = disabled || !isServiceReady || !userWallet || isLoading || paymentStatus === "success"
+  const isButtonDisabled = disabled || !isServiceReady || !userWallet || paymentStatus === "success"
 
   return (
     <div className="space-y-2">
@@ -232,11 +264,20 @@ export function PiPaymentButton({
         {getButtonContent()}
       </Button>
 
+      {isPiBrowserDetected && (
+        <div className="text-center">
+          <Badge variant="outline" className="text-green-600 border-green-600">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Pi Browser متصل
+          </Badge>
+        </div>
+      )}
+
       {paymentStatus === "processing" && userWallet && (
         <div className="text-center space-y-1">
           <Badge variant="outline" className="text-blue-600 border-blue-600">
             <Loader2 className="h-3 w-3 animate-spin mr-1" />
-            جاري التحويل إلى محفظتك
+            {isPiBrowserDetected ? "جاري المعالجة في Pi Browser" : "جاري التحويل إلى محفظتك"}
           </Badge>
           <div className="text-xs text-gray-500 break-all">
             إلى: {userWallet.substring(0, 8)}...{userWallet.substring(userWallet.length - 8)}
@@ -262,10 +303,12 @@ export function PiPaymentButton({
       {!userWallet && <div className="text-xs text-red-500 text-center">يرجى إضافة عنوان محفظة Pi في ملفك الشخصي</div>}
 
       <div className="text-xs text-gray-500 text-center">
-        {typeof window !== "undefined" &&
-        (window.location.hostname === "localhost" || window.location.hostname.includes("vercel"))
-          ? "وضع التطوير - محاكاة Pi Network"
-          : "التحويل آمن ومشفر عبر شبكة Pi Network"}
+        {isPiBrowserDetected
+          ? "سيتم فتح Pi Browser لإكمال المعاملة"
+          : typeof window !== "undefined" &&
+              (window.location.hostname === "localhost" || window.location.hostname.includes("vercel"))
+            ? "وضع التطوير - محاكاة Pi Network"
+            : "التحويل آمن ومشفر عبر شبكة Pi Network"}
       </div>
     </div>
   )

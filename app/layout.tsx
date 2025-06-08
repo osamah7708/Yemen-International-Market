@@ -11,7 +11,12 @@ const inter = Inter({ subsets: ["latin"] })
 export const metadata: Metadata = {
   title: "سوق اليمن الدولي",
   description: "منصة تسوق إلكتروني شاملة للمجتمع اليمني",
-    generator: 'v0.dev'
+  generator: "v0.dev",
+  manifest: "/manifest.json",
+  other: {
+    "pi-network-app-id": "yemen-international-market",
+    "pi-network-app-name": "سوق اليمن الدولي",
+  },
 }
 
 export default function RootLayout({
@@ -21,6 +26,21 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ar" dir="rtl">
+      <head>
+        {/* Pi Network Meta Tags */}
+        <meta name="pi-network-app-id" content="yemen-international-market" />
+        <meta name="pi-network-app-name" content="سوق اليمن الدولي" />
+        <meta name="pi-network-callback-url" content="/payment-callback" />
+
+        {/* Deep Link Support */}
+        <link rel="alternate" href="pi://app/yemen-market" />
+
+        {/* PWA Support */}
+        <meta name="theme-color" content="#dc2626" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="سوق اليمن الدولي" />
+      </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           {children}
