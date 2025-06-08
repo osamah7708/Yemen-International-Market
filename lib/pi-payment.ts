@@ -31,22 +31,59 @@ export interface PiPaymentResult {
 
 export const PI_WALLET_ADDRESS = "GAHPCOE5XS2PBFUVTPXF5IR3AZ5ASESD4FZZAGAH425WTZKLPNHY7FW4"
 
-// Pi Browser Detection
+// Pi Browser Detection - تحسين الكشف عن Pi Browser
 export const isPiBrowser = (): boolean => {
   if (typeof window === "undefined") return false
-  return window.navigator.userAgent.includes("PiBrowser") || window.location.hostname.includes("pi.app") || !!window.Pi
+
+  // تحسين الكشف عن Pi Browser بطرق متعددة
+  const userAgent = window.navigator.userAgent.toLowerCase()
+  const isPiApp =
+    userAgent.includes("pibrowser") || userAgent.includes("pi network") || userAgent.includes("pi-network")
+
+  const isPiHostname = window.location.hostname.includes("pi.app") || window.location.hostname.includes("minepi.com")
+
+  const hasPiObject = typeof window.Pi !== "undefined"
+
+  return isPiApp || isPiHostname || hasPiObject
 }
 
-// Deep Link Generator for Pi Browser
+// تحسين Deep Link Generator للعمل مع Pi Browser
 export const generatePiDeepLink = (action: string, params: Record<string, any> = {}): string => {
-  const baseUrl = "pi://app"
+  // تحديد URL الأساسي للـ Deep Link
+  const baseUrl = isPiBrowser() ? "pi://app" : "https://app-cdn.minepi.com/app"
+
+  // إضافة معرف التطبيق
+  const appId = "yemen-international-market"
+
+  // إنشاء URL للعودة
+  const returnUrl =
+    typeof window !== "undefined"
+      ? `${window.location.origin}/payment-callback`
+      : "https://yemen-market.vercel.app/payment-callback"
+
+  // بناء معلمات الاستعلام
   const queryParams = new URLSearchParams({
+    app_id: appId,
     action,
     ...params,
-    returnUrl: window.location.origin + "/payment-callback",
+    return_url: returnUrl,
   }).toString()
 
   return `${baseUrl}?${queryParams}`
+}
+
+// فتح Pi Browser مباشرة
+export const openPiBrowser = (action: string, params: Record<string, any> = {}): void => {
+  const deepLink = generatePiDeepLink(action, params)
+
+  // محاولة فتح التطبيق
+  const newWindow = window.open(deepLink, "_blank")
+
+  // إذا فشل الفتح، حاول بطريقة أخرى
+  if (!newWindow || newWindow.closed || typeof newWindow.closed === "undefined") {
+    // محاولة استخدام location.href كبديل
+    window.location.href = deepLink
+  }
 }
 
 export class PiPaymentService {
@@ -122,15 +159,17 @@ export class PiPaymentService {
 
       // معالج للـ URL callbacks
       const urlParams = new URLSearchParams(window.location.search)
-      if (urlParams.has("pi_payment_id")) {
-        const paymentId = urlParams.get("pi_payment_id")
+      if (urlParams.has("pi_payment_id") || urlParams.has("payment_id")) {
+        const paymentId = urlParams.get("pi_payment_id") || urlParams.get("payment_id") || ""
         const status = urlParams.get("status") || "completed"
-        const txid = urlParams.get("txid") || ""
+        const txid = urlParams.get("txid") || urlParams.get("transaction_id") || ""
+        const amount = Number.parseFloat(urlParams.get("amount") || "0")
 
         this.handlePaymentCallback({
           paymentId,
           status,
           txid,
+          amount,
         })
       }
     }
@@ -250,9 +289,9 @@ export class PiPaymentService {
           console.log("Redirecting to Pi Browser for transfer...")
           const deepLink = generatePiDeepLink("transfer", {
             amount: transfer.amount,
-            toWallet: transfer.toWallet,
+            to_address: transfer.toWallet,
             memo: transfer.memo,
-            transferId,
+            payment_id: transferId,
           })
           window.location.href = deepLink
         } else {
@@ -319,8 +358,8 @@ export class PiPaymentService {
         }
       }
 
-      if (typeof window === "undefined" || !window.Pi) {
-        throw new Error("Pi SDK not available")
+      if (typeof window === "undefined") {
+        throw new Error("Window object not available")
       }
 
       // التحقق من صحة عنوان المحفظة
@@ -332,69 +371,78 @@ export class PiPaymentService {
         throw new Error("عنوان المحفظة غير صحيح")
       }
 
-      const transfer: PiTransfer = { amount, toWallet, memo, metadata }
       const transferId = `transfer_${Date.now()}`
 
-      return new Promise((resolve, reject) => {
-        try {
-          // حفظ المعاملة المعلقة
-          this.pendingPayments.set(transferId, {
-            resolve,
-            reject,
+      // إذا كنا في Pi Browser، استخدم الـ Deep Link مباشرة
+      if (isPiBrowser()) {
+        console.log("Using direct Pi Browser integration for transfer")
+
+        // حفظ المعاملة المعلقة
+        this.pendingPayments.set(transferId, {
+          resolve: () => {},
+          reject: () => {},
+          amount,
+          toWallet,
+          timestamp: Date.now(),
+        })
+
+        // حفظ معلومات المعاملة في localStorage للاسترجاع لاحقاً
+        localStorage.setItem(
+          "pendingPiTransfer",
+          JSON.stringify({
+            transferId,
             amount,
             toWallet,
+            memo,
+            metadata,
             timestamp: Date.now(),
-          })
+          }),
+        )
 
-          if (isPiBrowser() && window.Pi.createTransfer) {
-            // استخدام Pi Browser الحقيقي
-            window.Pi.createTransfer(transfer, {
-              onReadyForServerApproval: (id: string) => {
-                console.log("Transfer ready for server approval:", id)
-              },
-              onReadyForServerCompletion: (id: string, txid: string) => {
-                console.log("Transfer completed:", id, txid)
-                resolve({
-                  paymentId: id,
-                  txid,
-                  status: "completed",
-                  amount,
-                  toWallet,
-                })
-                this.pendingPayments.delete(transferId)
-              },
-              onCancel: (id: string) => {
-                console.log("Transfer cancelled:", id)
-                resolve({
-                  paymentId: id,
-                  txid: "",
-                  status: "cancelled",
-                  amount,
-                  toWallet,
-                })
-                this.pendingPayments.delete(transferId)
-              },
-              onError: (error: Error) => {
-                console.error("Transfer error:", error)
-                reject(error)
-                this.pendingPayments.delete(transferId)
-              },
+        // فتح Pi Browser مباشرة
+        openPiBrowser("transfer", {
+          amount: amount.toString(),
+          to_address: toWallet,
+          memo: memo,
+          payment_id: transferId,
+          metadata: JSON.stringify(metadata),
+        })
+
+        // إرجاع معاملة معلقة
+        return {
+          paymentId: transferId,
+          txid: "",
+          status: "pending",
+          amount,
+          toWallet,
+        }
+      }
+
+      // إذا كان Pi SDK متاح
+      if (window.Pi) {
+        const transfer: PiTransfer = { amount, toWallet, memo, metadata }
+
+        return new Promise((resolve, reject) => {
+          try {
+            // حفظ المعاملة المعلقة
+            this.pendingPayments.set(transferId, {
+              resolve,
+              reject,
+              amount,
+              toWallet,
+              timestamp: Date.now(),
             })
-          } else {
-            // استخدام createPayment كبديل أو للمحاكاة
-            const paymentMemo = `${memo} - تحويل إلى: ${toWallet}`
-            const paymentMetadata = { ...metadata, toWallet, transferType: "direct" }
 
-            window.Pi!.createPayment(
-              { amount, memo: paymentMemo, metadata: paymentMetadata },
-              {
-                onReadyForServerApproval: (paymentId: string) => {
-                  console.log("Payment (as transfer) ready for server approval:", paymentId)
+            if (window.Pi.createTransfer) {
+              // استخدام Pi Browser الحقيقي
+              window.Pi.createTransfer(transfer, {
+                onReadyForServerApproval: (id: string) => {
+                  console.log("Transfer ready for server approval:", id)
                 },
-                onReadyForServerCompletion: (paymentId: string, txid: string) => {
-                  console.log("Payment (as transfer) completed:", paymentId, txid)
+                onReadyForServerCompletion: (id: string, txid: string) => {
+                  console.log("Transfer completed:", id, txid)
                   resolve({
-                    paymentId,
+                    paymentId: id,
                     txid,
                     status: "completed",
                     amount,
@@ -402,10 +450,10 @@ export class PiPaymentService {
                   })
                   this.pendingPayments.delete(transferId)
                 },
-                onCancel: (paymentId: string) => {
-                  console.log("Payment (as transfer) cancelled:", paymentId)
+                onCancel: (id: string) => {
+                  console.log("Transfer cancelled:", id)
                   resolve({
-                    paymentId,
+                    paymentId: id,
                     txid: "",
                     status: "cancelled",
                     amount,
@@ -414,30 +462,72 @@ export class PiPaymentService {
                   this.pendingPayments.delete(transferId)
                 },
                 onError: (error: Error) => {
-                  console.error("Payment (as transfer) error:", error)
+                  console.error("Transfer error:", error)
                   reject(error)
                   this.pendingPayments.delete(transferId)
                 },
-              },
-            )
-          }
+              })
+            } else {
+              // استخدام createPayment كبديل أو للمحاكاة
+              const paymentMemo = `${memo} - تحويل إلى: ${toWallet}`
+              const paymentMetadata = { ...metadata, toWallet, transferType: "direct" }
 
-          // مهلة زمنية للمعاملة (5 دقائق)
-          setTimeout(
-            () => {
-              if (this.pendingPayments.has(transferId)) {
-                this.pendingPayments.delete(transferId)
-                reject(new Error("انتهت مهلة المعاملة"))
-              }
-            },
-            5 * 60 * 1000,
-          )
-        } catch (error) {
-          console.error("Error in createDirectTransfer:", error)
-          this.pendingPayments.delete(transferId)
-          reject(error)
-        }
-      })
+              window.Pi!.createPayment(
+                { amount, memo: paymentMemo, metadata: paymentMetadata },
+                {
+                  onReadyForServerApproval: (paymentId: string) => {
+                    console.log("Payment (as transfer) ready for server approval:", paymentId)
+                  },
+                  onReadyForServerCompletion: (paymentId: string, txid: string) => {
+                    console.log("Payment (as transfer) completed:", paymentId, txid)
+                    resolve({
+                      paymentId,
+                      txid,
+                      status: "completed",
+                      amount,
+                      toWallet,
+                    })
+                    this.pendingPayments.delete(transferId)
+                  },
+                  onCancel: (paymentId: string) => {
+                    console.log("Payment (as transfer) cancelled:", paymentId)
+                    resolve({
+                      paymentId,
+                      txid: "",
+                      status: "cancelled",
+                      amount,
+                      toWallet,
+                    })
+                    this.pendingPayments.delete(transferId)
+                  },
+                  onError: (error: Error) => {
+                    console.error("Payment (as transfer) error:", error)
+                    reject(error)
+                    this.pendingPayments.delete(transferId)
+                  },
+                },
+              )
+            }
+
+            // مهلة زمنية للمعاملة (5 دقائق)
+            setTimeout(
+              () => {
+                if (this.pendingPayments.has(transferId)) {
+                  this.pendingPayments.delete(transferId)
+                  reject(new Error("انتهت مهلة المعاملة"))
+                }
+              },
+              5 * 60 * 1000,
+            )
+          } catch (error) {
+            console.error("Error in createDirectTransfer:", error)
+            this.pendingPayments.delete(transferId)
+            reject(error)
+          }
+        })
+      } else {
+        throw new Error("Pi SDK not available")
+      }
     } catch (error) {
       console.error("Direct transfer creation failed:", error)
       throw error

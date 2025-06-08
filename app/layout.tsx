@@ -32,6 +32,12 @@ export default function RootLayout({
         <meta name="pi-network-app-name" content="سوق اليمن الدولي" />
         <meta name="pi-network-callback-url" content="/payment-callback" />
 
+        {/* Viewport settings for mobile and Pi Browser */}
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+        />
+
         {/* Deep Link Support */}
         <link rel="alternate" href="pi://app/yemen-market" />
 

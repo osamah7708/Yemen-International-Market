@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Loader2, Wallet, CheckCircle, XCircle, AlertCircle, ExternalLink } from "lucide-react"
-import { PiPaymentService, type PiPaymentResult, isPiBrowser } from "@/lib/pi-payment"
+import { PiPaymentService, type PiPaymentResult, isPiBrowser, openPiBrowser } from "@/lib/pi-payment"
 
 interface PiPaymentButtonProps {
   amount: number
@@ -122,12 +122,49 @@ export function PiPaymentButton({
     setErrorMessage("")
 
     try {
-      const piService = PiPaymentService.getInstance()
-
       console.log("Starting direct transfer process...")
       console.log("Transfer amount:", amount, "Pi")
       console.log("To wallet:", userWallet)
       console.log("Pi Browser detected:", isPiBrowserDetected)
+
+      // إذا كنا في Pi Browser، استخدم الـ Deep Link مباشرة
+      if (isPiBrowserDetected) {
+        console.log("Using direct Pi Browser integration for transfer")
+
+        // حفظ معلومات المعاملة في localStorage للاسترجاع لاحقاً
+        const transferId = `transfer_${Date.now()}`
+        localStorage.setItem(
+          "pendingPiTransfer",
+          JSON.stringify({
+            transferId,
+            amount,
+            toWallet: userWallet,
+            memo: `دفع مقابل: ${productName}`,
+            metadata: {
+              productId,
+              orderId,
+            },
+            timestamp: Date.now(),
+          }),
+        )
+
+        // فتح Pi Browser مباشرة
+        openPiBrowser("transfer", {
+          amount: amount.toString(),
+          to_address: userWallet,
+          memo: `دفع مقابل: ${productName}`,
+          payment_id: transferId,
+          metadata: JSON.stringify({
+            productId,
+            orderId,
+          }),
+        })
+
+        // لا نغير الحالة هنا لأن المستخدم سيعود من Pi Browser
+        return
+      }
+
+      const piService = PiPaymentService.getInstance()
 
       // المصادقة
       console.log("Authenticating user...")

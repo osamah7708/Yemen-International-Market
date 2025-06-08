@@ -1,13 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Loader2, Send, CheckCircle, XCircle, AlertCircle, Copy } from "lucide-react"
+import { Loader2, Send, CheckCircle, XCircle, AlertCircle, Copy, ExternalLink } from "lucide-react"
 import { PiTransferService, type PiTransferResult } from "@/lib/pi-transfer"
-import { PI_WALLET_ADDRESS } from "@/lib/pi-payment"
+import { PI_WALLET_ADDRESS, isPiBrowser, openPiBrowser } from "@/lib/pi-payment"
 
 interface PiTransferButtonProps {
   amount: number
@@ -36,6 +36,42 @@ export function PiTransferButton({
   const [showTransferForm, setShowTransferForm] = useState(false)
   const [customAddress, setCustomAddress] = useState("")
   const [useCustomAddress, setUseCustomAddress] = useState(false)
+  const [isPiBrowserDetected, setIsPiBrowserDetected] = useState(false)
+
+  useEffect(() => {
+    // تحقق من Pi Browser
+    setIsPiBrowserDetected(isPiBrowser())
+
+    // معالج للعودة من Pi Browser
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return
+
+      const { type, data } = event.data
+      if (type === "PI_PAYMENT_CALLBACK") {
+        handleTransferCallback(data)
+      }
+    }
+
+    window.addEventListener("message", handleMessage)
+    return () => window.removeEventListener("message", handleMessage)
+  }, [])
+
+  const handleTransferCallback = (data: any) => {
+    console.log("Transfer callback received:", data)
+
+    if (data.status === "completed") {
+      setTransferStatus("success")
+      onTransferSuccess?.(data)
+    } else if (data.status === "cancelled") {
+      setTransferStatus("idle")
+      setErrorMessage("تم إلغاء عملية التحويل")
+    } else {
+      setTransferStatus("failed")
+      setErrorMessage("فشل في عملية التحويل")
+    }
+
+    setIsLoading(false)
+  }
 
   const transferService = PiTransferService.getInstance()
 
@@ -58,6 +94,44 @@ export function PiTransferButton({
       }
 
       console.log("Starting Pi transfer...")
+      console.log("Pi Browser detected:", isPiBrowserDetected)
+
+      // إذا كنا في Pi Browser، استخدم الـ Deep Link مباشرة
+      if (isPiBrowserDetected) {
+        console.log("Using direct Pi Browser integration for transfer")
+
+        // حفظ معلومات المعاملة في localStorage للاسترجاع لاحقاً
+        const transferId = `transfer_${Date.now()}`
+        localStorage.setItem(
+          "pendingPiTransfer",
+          JSON.stringify({
+            transferId,
+            amount,
+            toWallet: recipientAddress,
+            memo: `تحويل مقابل: ${productName}`,
+            metadata: {
+              productId,
+              orderId,
+            },
+            timestamp: Date.now(),
+          }),
+        )
+
+        // فتح Pi Browser مباشرة
+        openPiBrowser("transfer", {
+          amount: amount.toString(),
+          to_address: recipientAddress,
+          memo: `تحويل مقابل: ${productName}`,
+          payment_id: transferId,
+          metadata: JSON.stringify({
+            productId,
+            orderId,
+          }),
+        })
+
+        // لا نغير الحالة هنا لأن المستخدم سيعود من Pi Browser
+        return
+      }
 
       const result = await transferService.createDirectTransfer(
         amount,
@@ -83,7 +157,10 @@ export function PiTransferButton({
       setErrorMessage(errorMsg)
       onTransferError?.(error instanceof Error ? error : new Error(errorMsg))
     } finally {
-      setIsLoading(false)
+      if (!isPiBrowserDetected) {
+        setIsLoading(false)
+      }
+      // في Pi Browser، سيتم إيقاف التحميل عند العودة من التطبيق
     }
   }
 
@@ -100,7 +177,7 @@ export function PiTransferButton({
       return (
         <>
           <Loader2 className="h-4 w-4 animate-spin" />
-          جاري التحويل...
+          {isPiBrowserDetected ? "جاري فتح Pi Browser..." : "جاري التحويل..."}
         </>
       )
     }
@@ -126,7 +203,14 @@ export function PiTransferButton({
     return (
       <>
         <Send className="h-4 w-4" />
-        تحويل مباشر {amount.toFixed(3)} Pi
+        {isPiBrowserDetected ? (
+          <>
+            تحويل مباشر {amount.toFixed(3)} Pi
+            <ExternalLink className="h-3 w-3 ml-1" />
+          </>
+        ) : (
+          `تحويل مباشر ${amount.toFixed(3)} Pi`
+        )}
       </>
     )
   }
@@ -207,6 +291,15 @@ export function PiTransferButton({
             </div>
           </div>
 
+          {isPiBrowserDetected && (
+            <div className="text-center">
+              <Badge variant="outline" className="text-green-600 border-green-600">
+                <CheckCircle className="h-3 w-3 mr-1" />
+                Pi Browser متصل
+              </Badge>
+            </div>
+          )}
+
           <div className="flex gap-2">
             <Button
               onClick={handleTransfer}
@@ -223,7 +316,7 @@ export function PiTransferButton({
           {transferStatus === "processing" && (
             <Badge variant="outline" className="w-full justify-center text-blue-600 border-blue-600">
               <Loader2 className="h-3 w-3 animate-spin mr-1" />
-              جاري معالجة التحويل...
+              {isPiBrowserDetected ? "جاري المعالجة في Pi Browser" : "جاري معالجة التحويل..."}
             </Badge>
           )}
 
@@ -249,7 +342,18 @@ export function PiTransferButton({
         {getButtonContent()}
       </Button>
 
-      <div className="text-xs text-gray-500 text-center">تحويل مباشر إلى محفظة Pi Network</div>
+      {isPiBrowserDetected && (
+        <div className="text-center">
+          <Badge variant="outline" className="text-green-600 border-green-600">
+            <CheckCircle className="h-3 w-3 mr-1" />
+            Pi Browser متصل
+          </Badge>
+        </div>
+      )}
+
+      <div className="text-xs text-gray-500 text-center">
+        {isPiBrowserDetected ? "سيتم فتح Pi Browser لإكمال المعاملة" : "تحويل مباشر إلى محفظة Pi Network"}
+      </div>
     </div>
   )
 }

@@ -18,19 +18,40 @@ export default function PaymentCallbackPage() {
     const processCallback = async () => {
       try {
         // استخراج بيانات المعاملة من URL parameters
-        const paymentId = searchParams.get("pi_payment_id") || searchParams.get("payment_id")
-        const status = searchParams.get("status") || "completed"
-        const txid = searchParams.get("txid") || searchParams.get("transaction_id") || ""
-        const amount = Number.parseFloat(searchParams.get("amount") || "0")
-        const toWallet = searchParams.get("to_wallet") || ""
+        // دعم معلمات Pi Browser المختلفة
+        const paymentId =
+          searchParams.get("pi_payment_id") ||
+          searchParams.get("payment_id") ||
+          searchParams.get("paymentId") ||
+          searchParams.get("transferId")
 
-        if (paymentId) {
+        const status = searchParams.get("status") || "completed"
+        const txid =
+          searchParams.get("txid") || searchParams.get("transaction_id") || searchParams.get("transactionId") || ""
+
+        const amount = Number.parseFloat(searchParams.get("amount") || "0")
+        const toWallet =
+          searchParams.get("to_wallet") || searchParams.get("toWallet") || searchParams.get("to_address") || ""
+
+        // استرجاع المعاملة المعلقة من localStorage إذا لم تكن المعلومات كاملة
+        let pendingTransfer = null
+        try {
+          const pendingData = localStorage.getItem("pendingPiTransfer")
+          if (pendingData) {
+            pendingTransfer = JSON.parse(pendingData)
+            console.log("Found pending transfer:", pendingTransfer)
+          }
+        } catch (e) {
+          console.error("Error parsing pending transfer:", e)
+        }
+
+        if (paymentId || pendingTransfer) {
           const data = {
-            paymentId,
+            paymentId: paymentId || pendingTransfer?.transferId || `unknown_${Date.now()}`,
             status,
             txid,
-            amount,
-            toWallet,
+            amount: amount || pendingTransfer?.amount || 0,
+            toWallet: toWallet || pendingTransfer?.toWallet || "",
             timestamp: new Date().toISOString(),
           }
 
@@ -38,7 +59,7 @@ export default function PaymentCallbackPage() {
 
           // حفظ المعاملة في localStorage
           const existingTransactions = JSON.parse(localStorage.getItem("userTransactions") || "[]")
-          const existingIndex = existingTransactions.findIndex((t: any) => t.paymentId === paymentId)
+          const existingIndex = existingTransactions.findIndex((t: any) => t.paymentId === data.paymentId)
 
           if (existingIndex >= 0) {
             existingTransactions[existingIndex] = { ...existingTransactions[existingIndex], ...data }
@@ -47,6 +68,9 @@ export default function PaymentCallbackPage() {
           }
 
           localStorage.setItem("userTransactions", JSON.stringify(existingTransactions))
+
+          // حذف المعاملة المعلقة
+          localStorage.removeItem("pendingPiTransfer")
 
           // إرسال رسالة للنافذة الأصلية إذا كانت موجودة
           if (window.opener) {
@@ -124,7 +148,7 @@ export default function PaymentCallbackPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center" dir="rtl">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center safe-area-padding" dir="rtl">
         <Card className="w-full max-w-md">
           <CardContent className="p-8 text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -136,7 +160,7 @@ export default function PaymentCallbackPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4" dir="rtl">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 safe-area-padding" dir="rtl">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4">
