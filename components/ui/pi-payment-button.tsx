@@ -24,7 +24,7 @@ export function PiPaymentButton({
   orderId,
   onPaymentSuccess,
   onPaymentError,
-  className,
+  className = "",
   disabled = false,
 }: PiPaymentButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
@@ -33,20 +33,29 @@ export function PiPaymentButton({
   const [isServiceReady, setIsServiceReady] = useState(false)
 
   useEffect(() => {
-    // تهيئة الخدمة عند تحميل المكون
+    let mounted = true
+
     const initializeService = async () => {
       try {
         const piService = PiPaymentService.getInstance()
         await piService.initialize()
-        setIsServiceReady(true)
-        console.log("Pi Payment Service ready")
+        if (mounted) {
+          setIsServiceReady(true)
+          console.log("Pi Payment Service ready")
+        }
       } catch (error) {
         console.error("Failed to initialize Pi Payment Service:", error)
-        setErrorMessage("فشل في تهيئة نظام الدفع")
+        if (mounted) {
+          setErrorMessage("فشل في تهيئة نظام الدفع")
+        }
       }
     }
 
     initializeService()
+
+    return () => {
+      mounted = false
+    }
   }, [])
 
   const handlePayment = async () => {
@@ -64,8 +73,6 @@ export function PiPaymentButton({
 
       console.log("Starting payment process...")
 
-      // المصادقة
-      console.log("Authenticating user...")
       const auth = await piService.authenticateUser()
 
       if (!auth) {
@@ -74,7 +81,6 @@ export function PiPaymentButton({
 
       console.log("Authentication successful, creating payment...")
 
-      // إنشاء عملية الدفع
       const result = await piService.createPayment(amount, `دفع مقابل: ${productName}`, {
         productId,
         orderId,
@@ -194,7 +200,9 @@ export function PiPaymentButton({
 
       <div className="text-xs text-gray-500 text-center">
         {typeof window !== "undefined" &&
-        (window.location.hostname === "localhost" || window.location.hostname.includes("vercel"))
+        (window.location.hostname === "localhost" ||
+          window.location.hostname.includes("vercel") ||
+          window.location.hostname.includes("netlify"))
           ? "وضع التطوير - محاكاة Pi Network"
           : "الدفع آمن ومشفر عبر شبكة Pi Network"}
       </div>

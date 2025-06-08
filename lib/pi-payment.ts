@@ -1,3 +1,4 @@
+// إصلاح مشاكل TypeScript والتوافق
 // Pi Network Payment Integration
 export interface PiPayment {
   amount: number
@@ -34,12 +35,13 @@ export class PiPaymentService {
     try {
       console.log("Initializing Pi Payment Service...")
 
-      // في بيئة التطوير أو عند عدم توفر Pi SDK، استخدم المحاكاة
+      // التحقق من البيئة
       const isDevelopment =
-        typeof window !== "undefined" &&
-        (window.location.hostname === "localhost" ||
-          window.location.hostname.includes("vercel.app") ||
-          process.env.NODE_ENV === "development")
+        process.env.NODE_ENV === "development" ||
+        (typeof window !== "undefined" &&
+          (window.location.hostname === "localhost" ||
+            window.location.hostname.includes("vercel.app") ||
+            window.location.hostname.includes("netlify.app")))
 
       if (isDevelopment || !this.isPiSDKAvailable()) {
         console.log("Using Mock Pi SDK for development/testing")
@@ -51,7 +53,6 @@ export class PiPaymentService {
       return true
     } catch (error) {
       console.error("Failed to initialize Pi Payment Service:", error)
-      // في حالة الفشل، استخدم المحاكاة كـ fallback
       this.setupMockPiSDK()
       this.isInitialized = true
       return true
@@ -59,11 +60,15 @@ export class PiPaymentService {
   }
 
   private isPiSDKAvailable(): boolean {
-    return typeof window !== "undefined" && window.Pi !== undefined && typeof window.Pi.authenticate === "function"
+    return (
+      typeof window !== "undefined" &&
+      typeof (window as any).Pi !== "undefined" &&
+      typeof (window as any).Pi.authenticate === "function"
+    )
   }
 
   private setupMockPiSDK(): void {
-    if (typeof window === "undefined") return // إنشاء محاكاة بسيطة لـ Pi SDK
+    if (typeof window === "undefined") return
     ;(window as any).Pi = {
       init: async (options: any) => {
         console.log("Mock Pi SDK init called with:", options)
@@ -72,7 +77,6 @@ export class PiPaymentService {
 
       authenticate: async () => {
         console.log("Mock Pi authentication started...")
-        // محاكاة تأخير الشبكة
         await new Promise((resolve) => setTimeout(resolve, 1000))
 
         const mockAuth = {
@@ -94,7 +98,6 @@ export class PiPaymentService {
         const paymentId = `mock_payment_${Date.now()}`
         const txid = `mock_tx_${Date.now()}`
 
-        // محاكاة تدفق الدفع
         setTimeout(() => {
           console.log("Mock payment approval phase")
           callbacks.onReadyForServerApproval(paymentId)
@@ -111,7 +114,6 @@ export class PiPaymentService {
   async authenticateUser(): Promise<{ accessToken: string; user: any } | null> {
     try {
       if (!this.isInitialized) {
-        console.log("Service not initialized, initializing now...")
         const initialized = await this.initialize()
         if (!initialized) {
           throw new Error("Failed to initialize Pi Payment Service")
@@ -122,16 +124,13 @@ export class PiPaymentService {
         throw new Error("Window object not available")
       }
 
-      if (!window.Pi) {
+      const Pi = (window as any).Pi
+      if (!Pi || typeof Pi.authenticate !== "function") {
         throw new Error("Pi SDK not available")
       }
 
-      if (typeof window.Pi.authenticate !== "function") {
-        throw new Error("Pi authenticate function not available")
-      }
-
       console.log("Starting Pi authentication...")
-      const result = await window.Pi.authenticate()
+      const result = await Pi.authenticate()
       console.log("Pi authentication successful")
       return result
     } catch (error) {
@@ -149,7 +148,12 @@ export class PiPaymentService {
         }
       }
 
-      if (typeof window === "undefined" || !window.Pi) {
+      if (typeof window === "undefined") {
+        throw new Error("Pi SDK not available - window object not found")
+      }
+
+      const Pi = (window as any).Pi
+      if (!Pi) {
         throw new Error("Pi SDK not available")
       }
 
@@ -157,7 +161,7 @@ export class PiPaymentService {
 
       return new Promise((resolve, reject) => {
         try {
-          window.Pi!.createPayment(payment, {
+          Pi.createPayment(payment, {
             onReadyForServerApproval: (paymentId: string) => {
               console.log("Payment ready for server approval:", paymentId)
             },
@@ -194,7 +198,7 @@ export class PiPaymentService {
   }
 }
 
-// Pi Network SDK types للـ TypeScript
+// Pi Network SDK types
 declare global {
   interface Window {
     Pi?: {

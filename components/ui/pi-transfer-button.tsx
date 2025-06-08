@@ -27,7 +27,7 @@ export function PiTransferButton({
   orderId,
   onTransferSuccess,
   onTransferError,
-  className,
+  className = "",
   disabled = false,
 }: PiTransferButtonProps) {
   const [isLoading, setIsLoading] = useState(false)
@@ -40,8 +40,10 @@ export function PiTransferButton({
   const transferService = PiTransferService.getInstance()
 
   const copyAddress = () => {
-    navigator.clipboard.writeText(PI_WALLET_ADDRESS)
-    console.log("Address copied to clipboard")
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(PI_WALLET_ADDRESS)
+      console.log("Address copied to clipboard")
+    }
   }
 
   const handleTransfer = async () => {
@@ -52,7 +54,6 @@ export function PiTransferButton({
     try {
       const recipientAddress = useCustomAddress ? customAddress : PI_WALLET_ADDRESS
 
-      // التحقق من صحة العنوان
       if (useCustomAddress && !transferService.validatePiAddress(customAddress)) {
         throw new Error("عنوان محفظة Pi غير صحيح")
       }

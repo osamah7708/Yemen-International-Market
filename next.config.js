@@ -8,11 +8,21 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
-    domains: ["placeholder.svg"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+    ],
   },
   experimental: {
     esmExternals: false,
   },
+  // إضافة إعدادات للنشر
+  output: "standalone",
+  trailingSlash: false,
+  // إصلاح مشاكل الـ hydration
+  reactStrictMode: false,
 }
 
 module.exports = nextConfig
