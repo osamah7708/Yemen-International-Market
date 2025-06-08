@@ -8,7 +8,11 @@ const nextConfig = {
   },
   images: {
     unoptimized: true,
+    domains: ["placeholder.svg"],
+  },
+  experimental: {
+    esmExternals: false,
   },
 }
 
-export default nextConfig
+module.exports = nextConfig
