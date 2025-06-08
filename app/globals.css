@@ -78,13 +78,22 @@
 /* تخصيص الخطوط العربية */
 @import url("https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap");
 
+/* إعدادات أساسية للجسم */
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+  -ms-text-size-adjust: 100%;
+}
+
 body {
   font-family: "Tajawal", sans-serif;
   width: 100%;
-  height: 100%;
+  min-height: 100vh;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
   -webkit-tap-highlight-color: transparent;
+  line-height: 1.6;
+  font-size: 16px;
 }
 
 /* تحسينات للغة العربية */
@@ -95,25 +104,71 @@ h4,
 h5,
 h6 {
   font-weight: 700;
-  line-height: 1.5;
+  line-height: 1.4;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
-/* تحسينات لـ Pi Browser */
-html,
-body {
-  overscroll-behavior-y: none;
-  position: fixed;
-  inset: 0;
-  overflow: auto;
-  height: 100%;
+/* تحسينات للعرض المتجاوب */
+.container {
   width: 100%;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
 }
 
-/* تحسينات للعرض في الأجهزة المحمولة */
-@media (max-width: 768px) {
+@media (min-width: 640px) {
   .container {
-    padding-left: 1rem;
-    padding-right: 1rem;
+    max-width: 640px;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .container {
+    max-width: 768px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    max-width: 1024px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container {
+    max-width: 1280px;
+  }
+}
+
+/* تحسينات للأجهزة المحمولة */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+
+  .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  /* تحسين الأزرار للشاشات الصغيرة */
+  button {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+
+  /* تحسين النصوص للشاشات الصغيرة */
+  .text-xs {
+    font-size: 0.7rem;
+  }
+
+  .text-sm {
+    font-size: 0.8rem;
   }
 }
 
@@ -128,6 +183,7 @@ body {
 /* تحسينات للهيدر */
 .app-header-gradient {
   background: linear-gradient(135deg, #dc2626 0%, #ef4444 25%, #f97316 50%, #eab308 75%, #22c55e 100%);
+  background-size: 200% 200%;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -163,4 +219,166 @@ body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   letter-spacing: 0.5px;
+}
+
+/* تحسينات للكروت والمكونات */
+.card {
+  overflow: hidden;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* تحسينات للأزرار */
+button {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* تحسينات للنصوص الطويلة */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.break-words {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* تحسينات للشبكة (Grid) */
+.grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (max-width: 640px) {
+  .grid {
+    gap: 0.75rem;
+  }
+}
+
+/* تحسينات للفليكس */
+.flex {
+  display: flex;
+}
+
+.flex-shrink-0 {
+  flex-shrink: 0;
+}
+
+/* تحسينات للصور */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* تحسينات للإدخال */
+input,
+textarea,
+select {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* تحسينات للتمرير */
+.overflow-x-auto {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.overflow-y-auto {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* تحسينات للشاشات الصغيرة جداً */
+@media (max-width: 320px) {
+  .container {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  body {
+    font-size: 13px;
+  }
+
+  .text-xs {
+    font-size: 0.65rem;
+  }
+
+  .text-sm {
+    font-size: 0.75rem;
+  }
+
+  button {
+    min-height: 40px;
+    font-size: 0.8rem;
+  }
+}
+
+/* تحسينات للطباعة */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* تحسينات للوضع المظلم */
+@media (prefers-color-scheme: dark) {
+  .auto-dark {
+    color-scheme: dark;
+  }
+}
+
+/* تحسينات للحركة المخفضة */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* تحسينات للتباين العالي */
+@media (prefers-contrast: high) {
+  button {
+    border: 2px solid;
+  }
+}
+
+/* إصلاحات خاصة بـ iOS Safari */
+@supports (-webkit-touch-callout: none) {
+  body {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  input {
+    -webkit-appearance: none;
+    border-radius: 0;
+  }
+
+  button {
+    -webkit-appearance: none;
+  }
+}
+
+/* تحسينات للتركيز */
+:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* إخفاء outline الافتراضي */
+:focus:not(:focus-visible) {
+  outline: none;
 }

@@ -170,46 +170,46 @@ export function PiPaymentButton({
   const getButtonContent = () => {
     if (!user) {
       return (
-        <>
-          <AlertCircle className="h-4 w-4" />
-          يرجى تسجيل الدخول
-        </>
+        <div className="flex items-center justify-center gap-2 min-h-[20px]">
+          <AlertCircle className="h-4 w-4 flex-shrink-0" />
+          <span className="truncate">يرجى تسجيل الدخول</span>
+        </div>
       )
     }
 
     if (isLoading) {
       return (
-        <>
-          <Loader2 className="h-4 w-4 animate-spin" />
-          جاري فتح محفظة Pi...
-        </>
+        <div className="flex items-center justify-center gap-2 min-h-[20px]">
+          <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" />
+          <span className="truncate">جاري فتح محفظة Pi...</span>
+        </div>
       )
     }
 
     if (paymentStatus === "success") {
       return (
-        <>
-          <CheckCircle className="h-4 w-4" />
-          تم الدفع بنجاح
-        </>
+        <div className="flex items-center justify-center gap-2 min-h-[20px]">
+          <CheckCircle className="h-4 w-4 flex-shrink-0" />
+          <span className="truncate">تم الدفع بنجاح</span>
+        </div>
       )
     }
 
     if (paymentStatus === "failed") {
       return (
-        <>
-          <XCircle className="h-4 w-4" />
-          حاول مرة أخرى
-        </>
+        <div className="flex items-center justify-center gap-2 min-h-[20px]">
+          <XCircle className="h-4 w-4 flex-shrink-0" />
+          <span className="truncate">حاول مرة أخرى</span>
+        </div>
       )
     }
 
     return (
-      <>
-        <Wallet className="h-4 w-4" />
-        دفع {amount.toFixed(3)} Pi
-        <ExternalLink className="h-3 w-3 ml-1" />
-      </>
+      <div className="flex items-center justify-center gap-2 min-h-[20px]">
+        <Wallet className="h-4 w-4 flex-shrink-0" />
+        <span className="truncate">دفع {amount.toFixed(3)} Pi</span>
+        <ExternalLink className="h-3 w-3 flex-shrink-0" />
+      </div>
     )
   }
 
@@ -223,40 +223,41 @@ export function PiPaymentButton({
   const isButtonDisabled = disabled || !user || paymentStatus === "success"
 
   return (
-    <div className="space-y-2">
+    <div className="w-full space-y-2">
       <Button
         onClick={paymentStatus === "failed" ? resetPayment : handleDirectPayment}
         disabled={isButtonDisabled}
         variant={getButtonVariant()}
-        className={`w-full bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold ${className}`}
+        className={`w-full min-h-[44px] bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold transition-all duration-200 ${className}`}
+        size="default"
       >
         {getButtonContent()}
       </Button>
 
       {paymentStatus === "processing" && (
-        <div className="text-center space-y-1">
-          <Badge variant="outline" className="text-blue-600 border-blue-600">
-            <Loader2 className="h-3 w-3 animate-spin mr-1" />
-            جاري المعالجة في محفظة Pi
+        <div className="w-full text-center">
+          <Badge variant="outline" className="text-blue-600 border-blue-600 text-xs px-2 py-1">
+            <Loader2 className="h-3 w-3 animate-spin mr-1 flex-shrink-0" />
+            <span className="truncate">جاري المعالجة في محفظة Pi</span>
           </Badge>
-          <div className="text-xs text-gray-500">سيتم فتح محفظة Pi في نافذة جديدة لإكمال الدفع</div>
+          <div className="text-xs text-gray-500 mt-1 px-2">سيتم فتح محفظة Pi في نافذة جديدة لإكمال الدفع</div>
         </div>
       )}
 
       {errorMessage && (
-        <div className="text-center">
-          <Badge variant="outline" className="text-red-600 border-red-600">
-            <AlertCircle className="h-3 w-3 mr-1" />
-            {errorMessage}
+        <div className="w-full text-center">
+          <Badge variant="outline" className="text-red-600 border-red-600 text-xs px-2 py-1 max-w-full">
+            <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+            <span className="truncate">{errorMessage}</span>
           </Badge>
         </div>
       )}
 
       {user && paymentStatus === "idle" && (
-        <div className="text-xs text-gray-500 text-center">سيتم فتح محفظة Pi لإكمال عملية الدفع بشكل آمن</div>
+        <div className="text-xs text-gray-500 text-center px-2">سيتم فتح محفظة Pi لإكمال عملية الدفع بشكل آمن</div>
       )}
 
-      {!user && <div className="text-xs text-red-500 text-center">يرجى تسجيل الدخول لإكمال عملية الدفع</div>}
+      {!user && <div className="text-xs text-red-500 text-center px-2">يرجى تسجيل الدخول لإكمال عملية الدفع</div>}
     </div>
   )
 }

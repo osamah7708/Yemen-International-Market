@@ -162,163 +162,173 @@ export function PiTransferButton({
   const getButtonContent = () => {
     if (isLoading) {
       return (
-        <>
-          <Loader2 className="h-4 w-4 animate-spin" />
-          جاري فتح محفظة Pi...
-        </>
+        <div className="flex items-center justify-center gap-2 min-h-[20px]">
+          <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" />
+          <span className="truncate">جاري فتح محفظة Pi...</span>
+        </div>
       )
     }
 
     if (transferStatus === "success") {
       return (
-        <>
-          <CheckCircle className="h-4 w-4" />
-          تم التحويل بنجاح
-        </>
+        <div className="flex items-center justify-center gap-2 min-h-[20px]">
+          <CheckCircle className="h-4 w-4 flex-shrink-0" />
+          <span className="truncate">تم التحويل بنجاح</span>
+        </div>
       )
     }
 
     if (transferStatus === "failed") {
       return (
-        <>
-          <XCircle className="h-4 w-4" />
-          حاول مرة أخرى
-        </>
+        <div className="flex items-center justify-center gap-2 min-h-[20px]">
+          <XCircle className="h-4 w-4 flex-shrink-0" />
+          <span className="truncate">حاول مرة أخرى</span>
+        </div>
       )
     }
 
     return (
-      <>
-        <Send className="h-4 w-4" />
-        تحويل مباشر {amount.toFixed(3)} Pi
-        <ExternalLink className="h-3 w-3 ml-1" />
-      </>
+      <div className="flex items-center justify-center gap-2 min-h-[20px]">
+        <Send className="h-4 w-4 flex-shrink-0" />
+        <span className="truncate">تحويل مباشر {amount.toFixed(3)} Pi</span>
+        <ExternalLink className="h-3 w-3 flex-shrink-0" />
+      </div>
     )
   }
 
   if (showTransferForm) {
     return (
-      <Card className="w-full">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <Send className="h-5 w-5" />
-            تحويل Pi مباشر
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <input
-                type="radio"
-                id="store-wallet"
-                name="wallet-option"
-                checked={!useCustomAddress}
-                onChange={() => setUseCustomAddress(false)}
-                className="w-4 h-4"
-              />
-              <label htmlFor="store-wallet" className="text-sm font-medium">
-                تحويل إلى محفظة المتجر
-              </label>
-            </div>
-
-            {!useCustomAddress && (
-              <div className="bg-gray-50 p-3 rounded-lg">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium">عنوان محفظة المتجر:</span>
-                  <Button size="sm" variant="outline" onClick={copyAddress}>
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                </div>
-                <code className="text-xs break-all text-gray-600">{PI_WALLET_ADDRESS}</code>
-              </div>
-            )}
-
-            <div className="flex items-center gap-2">
-              <input
-                type="radio"
-                id="custom-wallet"
-                name="wallet-option"
-                checked={useCustomAddress}
-                onChange={() => setUseCustomAddress(true)}
-                className="w-4 h-4"
-              />
-              <label htmlFor="custom-wallet" className="text-sm font-medium">
-                تحويل إلى محفظة أخرى
-              </label>
-            </div>
-
-            {useCustomAddress && (
-              <div className="space-y-2">
-                <Input
-                  type="text"
-                  placeholder="أدخل عنوان محفظة Pi"
-                  value={customAddress}
-                  onChange={(e) => setCustomAddress(e.target.value)}
-                  className="font-mono text-sm"
+      <div className="w-full">
+        <Card className="w-full">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Send className="h-5 w-5 flex-shrink-0" />
+              <span className="truncate">تحويل Pi مباشر</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-3">
+              <div className="flex items-start gap-2">
+                <input
+                  type="radio"
+                  id="store-wallet"
+                  name="wallet-option"
+                  checked={!useCustomAddress}
+                  onChange={() => setUseCustomAddress(false)}
+                  className="w-4 h-4 mt-0.5 flex-shrink-0"
                 />
-                <p className="text-xs text-gray-500">تأكد من صحة العنوان قبل التحويل</p>
+                <label htmlFor="store-wallet" className="text-sm font-medium leading-tight">
+                  تحويل إلى محفظة المتجر
+                </label>
+              </div>
+
+              {!useCustomAddress && (
+                <div className="bg-gray-50 p-3 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium">عنوان محفظة المتجر:</span>
+                    <Button size="sm" variant="outline" onClick={copyAddress} className="h-8 w-8 p-0">
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                  <code className="text-xs break-all text-gray-600 block">{PI_WALLET_ADDRESS}</code>
+                </div>
+              )}
+
+              <div className="flex items-start gap-2">
+                <input
+                  type="radio"
+                  id="custom-wallet"
+                  name="wallet-option"
+                  checked={useCustomAddress}
+                  onChange={() => setUseCustomAddress(true)}
+                  className="w-4 h-4 mt-0.5 flex-shrink-0"
+                />
+                <label htmlFor="custom-wallet" className="text-sm font-medium leading-tight">
+                  تحويل إلى محفظة أخرى
+                </label>
+              </div>
+
+              {useCustomAddress && (
+                <div className="space-y-2">
+                  <Input
+                    type="text"
+                    placeholder="أدخل عنوان محفظة Pi"
+                    value={customAddress}
+                    onChange={(e) => setCustomAddress(e.target.value)}
+                    className="font-mono text-sm w-full"
+                  />
+                  <p className="text-xs text-gray-500">تأكد من صحة العنوان قبل التحويل</p>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-blue-50 p-3 rounded-lg">
+              <div className="flex justify-between items-center mb-1">
+                <span className="font-medium text-sm">المبلغ:</span>
+                <span className="text-lg font-bold text-blue-600">{amount.toFixed(3)} Pi</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm text-gray-600">المنتج:</span>
+                <span className="text-sm truncate max-w-[60%]" title={productName}>
+                  {productName}
+                </span>
+              </div>
+            </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+              <p className="text-yellow-800 text-sm text-center">🔒 سيتم فتح محفظة Pi الآمنة لإكمال التحويل</p>
+            </div>
+
+            <div className="flex gap-2">
+              <Button
+                onClick={handleTransfer}
+                disabled={disabled || isLoading || (useCustomAddress && !customAddress)}
+                className="flex-1 min-h-[44px]"
+                size="default"
+              >
+                {getButtonContent()}
+              </Button>
+              <Button variant="outline" onClick={resetTransfer} className="min-h-[44px] px-4">
+                إلغاء
+              </Button>
+            </div>
+
+            {transferStatus === "processing" && (
+              <div className="w-full text-center">
+                <Badge variant="outline" className="text-blue-600 border-blue-600 text-xs px-2 py-1">
+                  <Loader2 className="h-3 w-3 animate-spin mr-1 flex-shrink-0" />
+                  <span className="truncate">جاري المعالجة في محفظة Pi</span>
+                </Badge>
               </div>
             )}
-          </div>
 
-          <div className="bg-blue-50 p-3 rounded-lg">
-            <div className="flex justify-between items-center">
-              <span className="font-medium">المبلغ:</span>
-              <span className="text-lg font-bold text-blue-600">{amount.toFixed(3)} Pi</span>
-            </div>
-            <div className="flex justify-between items-center mt-1">
-              <span className="text-sm text-gray-600">المنتج:</span>
-              <span className="text-sm">{productName}</span>
-            </div>
-          </div>
-
-          <div className="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
-            <p className="text-yellow-800 text-sm text-center">🔒 سيتم فتح محفظة Pi الآمنة لإكمال التحويل</p>
-          </div>
-
-          <div className="flex gap-2">
-            <Button
-              onClick={handleTransfer}
-              disabled={disabled || isLoading || (useCustomAddress && !customAddress)}
-              className="flex-1"
-            >
-              {getButtonContent()}
-            </Button>
-            <Button variant="outline" onClick={resetTransfer}>
-              إلغاء
-            </Button>
-          </div>
-
-          {transferStatus === "processing" && (
-            <Badge variant="outline" className="w-full justify-center text-blue-600 border-blue-600">
-              <Loader2 className="h-3 w-3 animate-spin mr-1" />
-              جاري المعالجة في محفظة Pi
-            </Badge>
-          )}
-
-          {errorMessage && (
-            <Badge variant="outline" className="w-full justify-center text-red-600 border-red-600">
-              <AlertCircle className="h-3 w-3 mr-1" />
-              {errorMessage}
-            </Badge>
-          )}
-        </CardContent>
-      </Card>
+            {errorMessage && (
+              <div className="w-full text-center">
+                <Badge variant="outline" className="text-red-600 border-red-600 text-xs px-2 py-1 max-w-full">
+                  <AlertCircle className="h-3 w-3 mr-1 flex-shrink-0" />
+                  <span className="truncate">{errorMessage}</span>
+                </Badge>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     )
   }
 
   return (
-    <div className="space-y-2">
+    <div className="w-full space-y-2">
       <Button
         onClick={transferStatus === "failed" ? resetTransfer : () => setShowTransferForm(true)}
         disabled={disabled || transferStatus === "success"}
         variant={transferStatus === "failed" ? "destructive" : "outline"}
-        className={`w-full ${className}`}
+        className={`w-full min-h-[44px] transition-all duration-200 ${className}`}
+        size="default"
       >
         {getButtonContent()}
       </Button>
 
-      <div className="text-xs text-gray-500 text-center">سيتم فتح محفظة Pi الآمنة لإكمال المعاملة</div>
+      <div className="text-xs text-gray-500 text-center px-2">سيتم فتح محفظة Pi الآمنة لإكمال المعاملة</div>
     </div>
   )
 }
