@@ -124,3 +124,43 @@ body {
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
 }
+
+/* تحسينات للهيدر */
+.app-header-gradient {
+  background: linear-gradient(135deg, #dc2626 0%, #ef4444 25%, #f97316 50%, #eab308 75%, #22c55e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 3s ease-in-out infinite;
+}
+
+@keyframes gradient-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* تحسين شكل الأيقونة */
+.app-logo {
+  background: linear-gradient(135deg, #dc2626, #22c55e);
+  box-shadow: 0 8px 32px rgba(220, 38, 38, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.app-logo:hover {
+  transform: scale(1.05);
+  box-shadow: 0 12px 40px rgba(220, 38, 38, 0.4);
+}
+
+/* تحسين النص التحتي */
+.app-subtitle {
+  background: linear-gradient(90deg, #6b7280, #374151);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: 0.5px;
+}

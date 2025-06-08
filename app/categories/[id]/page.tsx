@@ -1,14 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Star, Heart, ShoppingCart } from "lucide-react"
+import { Star, Heart, ShoppingCart } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { PiPaymentButton } from "@/components/ui/pi-payment-button"
 import Link from "next/link"
 import { useParams } from "next/navigation"
+import { AppHeader } from "@/components/app-header"
 
 const categoryProducts = {
   "1": [
@@ -99,43 +99,9 @@ export default function CategoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-gray-50 pb-20" dir="rtl">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg flex items-center justify-center">
-                <span className="text-3xl">{category.icon}</span>
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-800">{category.name}</h1>
-                <p className="text-gray-600 mt-1">{products.length} منتج متاح</p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Link href="/categories">
-                <Button variant="outline">جميع الأقسام</Button>
-              </Link>
-              <Link href="/">
-                <Button variant="outline">الرئيسية</Button>
-              </Link>
-            </div>
-          </div>
-
-          {/* Search */}
-          <div className="relative max-w-md">
-            <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-            <Input
-              type="search"
-              placeholder="ابحث في المنتجات..."
-              className="pr-12"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-        </div>
-      </div>
+      <AppHeader />
 
       {/* Products */}
       <div className="container mx-auto px-4 py-8">

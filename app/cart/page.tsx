@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ShoppingCart, Plus, Minus, Trash2, ArrowLeft } from "lucide-react"
+import { Plus, Minus, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -9,6 +9,7 @@ import { PiPaymentButton } from "@/components/ui/pi-payment-button"
 import { PiTransferButton } from "@/components/ui/pi-transfer-button"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { AppHeader } from "@/components/app-header"
 
 const mockCartItems = [
   {
@@ -82,29 +83,9 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-gray-50 pb-20" dir="rtl">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-r from-green-600 to-blue-600 rounded-full flex items-center justify-center">
-                <ShoppingCart className="h-8 w-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-800">سلة التسوق</h1>
-                <p className="text-gray-600">{getTotalItems()} منتج في السلة</p>
-              </div>
-            </div>
-            <Link href="/">
-              <Button variant="outline" className="gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                متابعة التسوق
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
+      <AppHeader />
 
       <div className="container mx-auto px-4 py-8">
         {cartItems.length > 0 ? (

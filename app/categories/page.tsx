@@ -1,12 +1,10 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Filter, Grid, List } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
+import { AppHeader } from "@/components/app-header"
 
 const categories = [
   {
@@ -84,54 +82,9 @@ export default function CategoriesPage() {
   )
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-gray-50 pb-20" dir="rtl">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800">تصفح الأقسام</h1>
-              <p className="text-gray-600 mt-1">اكتشف جميع المنتجات المتاحة</p>
-            </div>
-            <Link href="/">
-              <Button variant="outline">العودة للرئيسية</Button>
-            </Link>
-          </div>
-
-          {/* Search and Filters */}
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="relative flex-1">
-              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <Input
-                type="search"
-                placeholder="ابحث في الأقسام..."
-                className="pr-12"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "grid" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("grid")}
-              >
-                <Grid className="h-4 w-4" />
-              </Button>
-              <Button
-                variant={viewMode === "list" ? "default" : "outline"}
-                size="icon"
-                onClick={() => setViewMode("list")}
-              >
-                <List className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <AppHeader />
 
       {/* Categories */}
       <div className="container mx-auto px-4 py-8">

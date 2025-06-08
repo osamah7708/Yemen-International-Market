@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Package, Clock, CheckCircle, XCircle, Eye, ArrowLeft } from "lucide-react"
+import { Package, Clock, CheckCircle, XCircle, Eye } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { AppHeader } from "@/components/app-header"
 
 const mockOrders = [
   {
@@ -112,29 +113,9 @@ export default function OrdersPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-gray-50 pb-20" dir="rtl">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-                <Package className="h-8 w-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-800">طلباتي</h1>
-                <p className="text-gray-600">تتبع وإدارة طلباتك</p>
-              </div>
-            </div>
-            <Link href="/">
-              <Button variant="outline" className="gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                العودة للرئيسية
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
+      <AppHeader />
 
       <div className="container mx-auto px-4 py-8">
         {/* Filters */}

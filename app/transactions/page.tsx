@@ -1,12 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ArrowLeft, Copy, ExternalLink, RefreshCw } from "lucide-react"
+import { Copy, ExternalLink } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { AppHeader } from "@/components/app-header"
 
 export default function TransactionsPage() {
   const [user, setUser] = useState<any>(null)
@@ -113,35 +114,9 @@ export default function TransactionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-gray-50 pb-20" dir="rtl">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-2xl text-white">💳</span>
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-800">تاريخ المعاملات</h1>
-                <p className="text-gray-600">جميع معاملات Pi Network الخاصة بك</p>
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={loadTransactions} className="gap-2">
-                <RefreshCw className="h-4 w-4" />
-                تحديث
-              </Button>
-              <Link href="/">
-                <Button variant="outline" className="gap-2">
-                  <ArrowLeft className="h-4 w-4" />
-                  العودة للرئيسية
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
+      <AppHeader />
 
       <div className="container mx-auto px-4 py-8">
         {isLoading ? (

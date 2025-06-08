@@ -1,19 +1,16 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
-import { Search, ShoppingCart, User, Star, Heart } from "lucide-react"
+import { Star } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { PiPaymentButton } from "@/components/ui/pi-payment-button"
 import { PiWalletInfo } from "@/components/ui/pi-wallet-info"
 import { PiTransferButton } from "@/components/ui/pi-transfer-button"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { AppHeader } from "@/components/app-header"
 
 const categories = [
   {
@@ -92,7 +89,6 @@ const featuredProducts = [
 export default function YemenMarketHomePage() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [user, setUser] = useState<any>(null)
-  const [searchQuery, setSearchQuery] = useState("")
   const router = useRouter()
 
   useEffect(() => {
@@ -107,117 +103,10 @@ export default function YemenMarketHomePage() {
     setUser(null)
   }
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
-    }
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-red-50" dir="rtl">
+    <div className="min-h-screen bg-gradient-to-br from-green-50 to-red-50 pb-20" dir="rtl">
       {/* Header */}
-      <header className="bg-white shadow-lg border-b-4 border-red-600">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo */}
-            <div className="flex items-center space-x-reverse space-x-4">
-              <div className="relative w-14 h-14 overflow-hidden rounded-full bg-green-100 flex items-center justify-center">
-                <span className="text-2xl">🛒</span>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">سوق اليمن الدولي</h1>
-                <p className="text-sm text-gray-600">خدمات لا متناهية لتسهيل حياتك</p>
-              </div>
-            </div>
-
-            {/* Search Bar */}
-            <div className="hidden md:flex flex-1 max-w-2xl mx-8">
-              <div className="relative w-full">
-                <form onSubmit={handleSearch} className="relative w-full">
-                  <Input
-                    type="search"
-                    placeholder="ابحث عن المنتجات..."
-                    className="pl-12 pr-4 py-3 text-right border-2 border-gray-200 focus:border-red-500"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                  <button
-                    type="submit"
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5"
-                  >
-                    <Search className="h-5 w-5" />
-                  </button>
-                </form>
-              </div>
-            </div>
-
-            {/* Navigation Icons */}
-            <div className="flex items-center space-x-reverse space-x-4">
-              <Button variant="ghost" size="icon" className="relative">
-                <Heart className="h-6 w-6" />
-                <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs">3</Badge>
-              </Button>
-              <Button variant="ghost" size="icon" className="relative">
-                <ShoppingCart className="h-6 w-6" />
-                <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs">5</Badge>
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon">
-                    <User className="h-6 w-6" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="text-right">
-                  {user ? (
-                    <>
-                      <DropdownMenuItem>مرحباً، {user.name}</DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Link href="/profile">الملف الشخصي</Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Link href="/orders">طلباتي</Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>الإعدادات</DropdownMenuItem>
-                      <DropdownMenuItem onClick={handleLogout}>تسجيل الخروج</DropdownMenuItem>
-                    </>
-                  ) : (
-                    <>
-                      <DropdownMenuItem>
-                        <Link href="/auth/login">تسجيل الدخول</Link>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Link href="/auth/register">إنشاء حساب</Link>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-
-          {/* Mobile Search */}
-          <div className="md:hidden mt-4">
-            <div className="relative">
-              <form onSubmit={handleSearch} className="relative w-full">
-                <Input
-                  type="search"
-                  placeholder="ابحث عن المنتجات..."
-                  className="pl-12 pr-4 py-3 text-right border-2 border-gray-200 focus:border-red-500"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <button
-                  type="submit"
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5"
-                >
-                  <Search className="h-5 w-5" />
-                </button>
-              </form>
-            </div>
-          </div>
-        </div>
-      </header>
+      <AppHeader />
 
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-red-600 via-red-700 to-green-600 text-white py-20">

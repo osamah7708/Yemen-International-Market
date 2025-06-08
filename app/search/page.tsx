@@ -1,16 +1,15 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Search, Filter, Star, Heart, ShoppingCart, SlidersHorizontal } from "lucide-react"
+import { Star, Heart, ShoppingCart, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { PiPaymentButton } from "@/components/ui/pi-payment-button"
 import { PiTransferButton } from "@/components/ui/pi-transfer-button"
-import Link from "next/link"
 import { useSearchParams } from "next/navigation"
+import { AppHeader } from "@/components/app-header"
+import { Input } from "@/components/ui/input"
 
 const allProducts = [
   {
@@ -156,84 +155,27 @@ export default function SearchPage() {
   const categories = [...new Set(allProducts.map((p) => p.category))]
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-gray-50 pb-20" dir="rtl">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800">البحث في المنتجات</h1>
-              <p className="text-gray-600 mt-1">
-                {searchQuery ? `نتائج البحث عن: "${searchQuery}"` : "تصفح جميع المنتجات"}
-              </p>
-            </div>
-            <Link href="/">
-              <Button variant="outline">العودة للرئيسية</Button>
-            </Link>
-          </div>
+      <AppHeader />
 
-          {/* Search Bar */}
-          <div className="relative max-w-2xl mb-6">
+      {/* Search Bar */}
+      <div className="bg-white border-b border-gray-200 py-4">
+        <div className="container mx-auto px-4">
+          <div className="relative max-w-2xl mx-auto">
             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <Input
               type="search"
               placeholder="ابحث عن المنتجات..."
-              className="pr-12"
+              className="pr-12 py-3 text-lg"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-
-          {/* Filters */}
-          <div className="flex flex-wrap gap-4 items-center">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  <SlidersHorizontal className="h-4 w-4" />
-                  ترتيب حسب
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setSortBy("relevance")}>الأكثر صلة</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy("price-low")}>السعر: من الأقل للأعلى</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy("price-high")}>السعر: من الأعلى للأقل</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy("rating")}>الأعلى تقييماً</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setSortBy("newest")}>الأحدث</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  <Filter className="h-4 w-4" />
-                  الفئة
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setFilterCategory("all")}>جميع الفئات</DropdownMenuItem>
-                {categories.map((category) => (
-                  <DropdownMenuItem key={category} onClick={() => setFilterCategory(category)}>
-                    {category}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2">
-                  💰 السعر
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setPriceRange("all")}>جميع الأسعار</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setPriceRange("low")}>أقل من 0.1 Pi</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setPriceRange("medium")}>0.1 - 1 Pi</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setPriceRange("high")}>أكثر من 1 Pi</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <Badge variant="secondary">{filteredProducts.length} منتج</Badge>
+          <div className="text-center mt-2">
+            <p className="text-sm text-gray-600">
+              {searchQuery ? `نتائج البحث عن: "${searchQuery}"` : "اكتشف آلاف المنتجات"}
+            </p>
           </div>
         </div>
       </div>

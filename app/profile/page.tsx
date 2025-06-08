@@ -1,13 +1,14 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { User, Edit, Wallet, Phone, Mail, MapPin, Save, ArrowLeft, Copy, CheckCircle } from "lucide-react"
+import { User, Edit, Wallet, Phone, Mail, MapPin, Save, Copy, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { AppHeader } from "@/components/app-header"
 
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null)
@@ -73,29 +74,9 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50" dir="rtl">
+    <div className="min-h-screen bg-gray-50 pb-20" dir="rtl">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-gradient-to-r from-red-600 to-green-600 rounded-full flex items-center justify-center">
-                <User className="h-8 w-8 text-white" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-800">الملف الشخصي</h1>
-                <p className="text-gray-600">إدارة معلوماتك الشخصية</p>
-              </div>
-            </div>
-            <Link href="/">
-              <Button variant="outline" className="gap-2">
-                <ArrowLeft className="h-4 w-4" />
-                العودة للرئيسية
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </div>
+      <AppHeader />
 
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
