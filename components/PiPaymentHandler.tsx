@@ -1,4 +1,4 @@
-```tsx
+`\`\`tsx
 // components/PiPaymentHandler.tsx
 import { useEffect } from 'react';
 
@@ -55,4 +55,4 @@ const PiPaymentHandler = () => {
 export default PiPaymentHandler;
 
 // Then import it in App.tsx or _app.tsx (Next.js)
-```
+\`\`\`
