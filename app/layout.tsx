@@ -1,61 +1,33 @@
-import type React from "react"
-import type { Metadata } from "next"
-import { Inter } from "next/font/google"
-import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
-import { Toaster } from "@/components/ui/toaster"
-import { Toaster as Sonner } from "sonner"
-import { BottomNavigation } from "@/components/bottom-navigation"
+import "./globals.css";
+import Script from "next/script";
+import { Inter } from "next/font/google";
 
-const inter = Inter({ subsets: ["latin"] })
+const inter = Inter({ subsets: ["latin"] });
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "سوق اليمن الدولي",
-  description: "منصة تسوق إلكتروني شاملة للمجتمع اليمني",
-  generator: "v0.dev",
-  manifest: "/manifest.json",
-  other: {
-    "pi-network-app-id": "yemen-international-market",
-    "pi-network-app-name": "سوق اليمن الدولي",
-  },
-}
+    description:
+        "An application based on facilitating the life of the Yemeni community in partnership with the Pi Network",
+    generator: 'v0.dev'
+};
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <html lang="ar" dir="rtl">
-      <head>
-        {/* Pi Network Meta Tags */}
-        <meta name="pi-network-app-id" content="yemen-international-market" />
-        <meta name="pi-network-app-name" content="سوق اليمن الدولي" />
-        <meta name="pi-network-callback-url" content="/payment-callback" />
-
-        {/* Viewport settings for mobile and Pi Browser */}
-        <meta
-          name="viewport"
-          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
-        />
-
-        {/* Deep Link Support */}
-        <link rel="alternate" href="pi://app/yemen-market" />
-
-        {/* PWA Support */}
-        <meta name="theme-color" content="#dc2626" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="سوق اليمن الدولي" />
-      </head>
-      <body className={inter.className}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          {children}
-          <BottomNavigation />
-          <Toaster />
-          <Sonner position="top-center" richColors />
-        </ThemeProvider>
-      </body>
-    </html>
-  )
-}
+        export default function RootLayout({
+          children,
+          }: {
+            children: React.ReactNode;
+            }) {
+              return (
+                  <html lang="en">
+                        <head>
+                                <Script
+                                          src="https://sdk.minepi.com/pi-sdk.js"
+                                                    strategy="beforeInteractive"
+                                                            />
+                                                                    <Script id="pi-init" strategy="beforeInteractive">
+                                                                              {`Pi.init({ version: "2.0" });`}
+                                                                                      </Script>
+                                                                                            </head>
+                                                                                                  <body className={inter.className}>{children}</body>
+                                                                                                      </html>
+                                                                                                        );
+                                                                                                        }
