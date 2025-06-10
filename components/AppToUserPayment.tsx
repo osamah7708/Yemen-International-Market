@@ -1,4 +1,4 @@
-```tsx
+`\`\`tsx
 import React from 'react';
 
 // Pi SDK import
@@ -46,4 +46,4 @@ function AppToUserPayment() {
 }
 
 export default AppToUserPayment;
-```
+\`\`\`
