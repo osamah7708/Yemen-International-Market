@@ -1,3 +1,43 @@
+// تفاصيل المعاملة
+const transactionDetails = {
+  product: "آيفون 15 برو ماكس",
+  amount: 3.820, // Pi
+  sender: "GCPQYUYCL7TUMP7MBC6ZTNYSAXH2DDI23X7J7J5MNB2JW5T73KKOZ4CR",
+  recipient: "GAHPCOE5XS2PBFUVTPXF5IR3AZ5ASESD4FZZAGAH425WTZKLPNHY7FW4"
+};
+
+// دالة تنفيذ الدفع عبر Pi Network
+function handlePiPayment() {
+  Pi.createPayment({
+    amount: transactionDetails.amount,
+    memo: transactionDetails.product, // بإمكانك عرض اسم المنتج في المذكرة
+    metadata: { // بيانات إضافية اختيارية
+      product: transactionDetails.product,
+      sender: transactionDetails.sender,
+      recipient: transactionDetails.recipient
+    },
+    onReadyForServerCompletion: function(paymentId: string, txid?: string) {
+      // إرسال بيانات الدفع إلى الخادم للتحقق النهائي
+      fetch('/api/verify-pi-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          paymentId,
+          txid,
+          ...transactionDetails
+        })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          alert('تم الدفع بنجاح!');
+        } else {
+          alert('فشل التحقق من الدفع!');
+        }
+      });
+    }
+  });
+}
 // Pi Network Payment Integration with Pi Browser Support
 export interface PiPayment {
   amount: number
